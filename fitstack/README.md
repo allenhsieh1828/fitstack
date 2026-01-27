@@ -1,16 +1,54 @@
-# React + Vite
+FITSTACK 是一款專為健身房設計的 Web 應用程式，旨在簡化會員簽到流程並自動化獎勵兌換管理。透過即時雲端同步，管理者與會員可以隨時查看最新進度。
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+✨ 核心功能
+👤 會員端 (User Side)
+互動式簽到日曆：直觀的日曆介面，點擊日期即可觸發簽到。
 
-Currently, two official plugins are available:
+安全驗證機制：簽到時需輸入 4 位數驗證碼，防止誤觸或作弊。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+進度追蹤條：動態顯示當前點數與目標（10點）的距離。
 
-## React Compiler
+即時狀態回饋：簽到後圖示立即轉綠，並同步顯示於進度條。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+🛡️ 管理者端 (Admin Side)
+成員管理儀表板：一覽所有會員的點數、姓名及最後簽到日期。
 
-## Expanding the ESLint configuration
+遠端補簽功能：管理者可進入會員詳情頁，點擊日曆直接為會員手動加點（免驗證碼）。
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+獎勵兌換系統：
+
+達標偵測：當成員滿 10 點時，兌換按鈕會自動變色並產生呼吸燈動畫。
+
+一鍵重置：點擊兌換後，系統自動清空該成員紀錄並重置週期。
+
+🛠️ 技術棧 (Tech Stack)
+前端框架：React.js (Vite)
+
+樣式處理：CSS3 (包含自定義動畫與螢光霓虹設計)
+
+後端資料庫：Firebase Cloud Firestore (實時資料庫)
+
+動畫庫：Framer Motion
+
+圖示庫：Lucide React
+
+日期處理：date-fns
+
+📂 專案結構
+Plaintext
+src/
+├── components/          # 核心組件 (日曆, 彈窗, 進度條, 管理面板)
+├── data/                # 初始 Mock 數據
+├── pages/               # 登入頁面
+├── firebase.js          # Firebase SDK 配置與初始化
+├── App.jsx              # 主要邏輯控制中心
+└── App.css              # 全域樣式與健身房風格設計
+
+
+🔑 測試帳號
+使用者模式：直接點擊「登入」即可進入 Allen 的視圖。
+
+管理者模式：切換至管理員，輸入密碼 admin123 進入後台。
+
+💡 開發筆記
+本專案採用了 Firebase onSnapshot 監聽技術，這意味著當管理者在後台更改點數時，會員的手機頁面會「無感重新整理」即時更新進度，大幅提升了使用者體驗。
