@@ -4,14 +4,19 @@ import GymCalendar from './components/GymCalendar.jsx';
 import CheckInModal from './components/CheckInModal.jsx';
 import ProgressBar from './components/ProgressBar.jsx';
 import Login from './pages/Login.jsx'; 
-import AdminDashboard from './components/AdminDashboard.jsx'; // 引入管理者組件
-import { MOCK_USER, MOCK_USERS } from './data/mockData.js'; // 引入單一與多位會員數據
+import AdminDashboard from './components/AdminDashboard.jsx'; 
+import { MOCK_USER, MOCK_USERS } from './data/mockData.js';
+import { ChevronLeft } from 'lucide-react'; // 用於返回清單
 
 function App() {
   const [userRole, setUserRole] = useState(null); // null, 'user', 'admin'
   const [history, setHistory] = useState(MOCK_USER.checkInHistory);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+
+  // --- 新增管理者專用狀態 ---
+  const [selectedMember, setSelectedMember] = useState(null); // 目前選中的成員
+  const [allUsers, setAllUsers] = useState(MOCK_USERS); // 會員總表 state
 
   const TARGET_POINTS = 10;
 
@@ -20,15 +25,40 @@ function App() {
     return <Login onLogin={(role) => setUserRole(role)} />;
   }
 
-  // --- 使用者介面處理 ---
+  // --- 核心邏輯：處理日期點擊 ---
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split('T')[0];
-    if (history.includes(dateStr)) {
-        alert("這天已經簽過到囉！🔥");
+
+    // 情境 A：管理者正在幫成員「手動加點」
+    if (userRole === 'admin' && selectedMember) {
+      if (selectedMember.checkInHistory.includes(dateStr)) {
+        alert("該成員此日已簽到過囉！");
         return;
+      }
+      
+      // 更新全域會員資料
+      const updatedUsers = allUsers.map(u => {
+        if (u.id === selectedMember.id) {
+          const newHistory = [...u.checkInHistory, dateStr];
+          const updatedUser = { ...u, checkInHistory: newHistory, totalPoints: newHistory.length };
+          setSelectedMember(updatedUser); // 同步更新目前的詳情視窗
+          return updatedUser;
+        }
+        return u;
+      });
+      setAllUsers(updatedUsers);
+      alert(`已幫 ${selectedMember.name} 補簽成功！💪`);
+    } 
+    
+    // 情境 B：一般使用者自行簽到
+    else {
+      if (history.includes(dateStr)) {
+          alert("這天已經簽過到囉！🔥");
+          return;
+      }
+      setSelectedDate(date);
+      setIsModalOpen(true);
     }
-    setSelectedDate(date);
-    setIsModalOpen(true);
   };
 
   const handleConfirm = (code) => {
@@ -45,13 +75,24 @@ function App() {
   return (
     <div className="app-wrapper">
       <header className="header-area" style={{ position: 'relative', width: '100%', maxWidth: '500px' }}>
-        <button 
-          onClick={() => setUserRole(null)} 
-          className="nav-btn" 
-          style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', padding: '4px 12px' }}
-        >
-          登出
-        </button>
+        {/* 如果在管理者詳情頁，顯示返回鍵；否則顯示登出鍵 */}
+        {userRole === 'admin' && selectedMember ? (
+          <button 
+            onClick={() => setSelectedMember(null)} 
+            className="nav-btn" 
+            style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}
+          >
+            <ChevronLeft size={20} />
+          </button>
+        ) : (
+          <button 
+            onClick={() => {setUserRole(null); setSelectedMember(null);}} 
+            className="nav-btn" 
+            style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', padding: '4px 12px' }}
+          >
+            登出
+          </button>
+        )}
         <h1 className="main-title">FIT<span className="text-neon">STACK</span></h1>
       </header>
 
@@ -67,8 +108,18 @@ function App() {
           />
         </>
       ) : (
-        /* 使用真正的管理者儀表板並傳入會員清單 */
-        <AdminDashboard users={MOCK_USERS} />
+        /* 管理者模式：判斷要顯示「清單」還是「個人詳情」 */
+        selectedMember ? (
+          <div className="admin-detail-view" style={{ width: '100%', maxWidth: '400px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h2 className="text-neon" style={{ margin: 0 }}>{selectedMember.name}</h2>
+              <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>管理者模式：點擊日期直接補簽</p>
+            </div>
+            <GymCalendar history={selectedMember.checkInHistory} onCheckIn={handleDateClick} />
+          </div>
+        ) : (
+          <AdminDashboard users={allUsers} onSelectUser={(user) => setSelectedMember(user)} />
+        )
       )}
     </div>
   );
