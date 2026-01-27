@@ -39,7 +39,7 @@ body {
 .main-title {
   font-size: 3rem;
   font-weight: 900;
-  font-style: italic;
+  font-style: italic; /* 修正完成：補上屬性名稱 */
   letter-spacing: -2px;
   margin: 0;
 }
@@ -148,7 +148,7 @@ body {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: flex-end; /* 手機端建議從底部彈出 */
+  align-items: flex-end;
   justify-content: center;
   z-index: 1000;
 }
@@ -279,4 +279,164 @@ body {
   font-size: 0.75rem;
   text-align: center;
   margin: 0;
+}
+
+/* 登入頁面佈局 */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gym-black);
+}
+
+.login-card {
+  background: var(--gym-gray);
+  padding: 3rem 2rem;
+  border-radius: 2rem;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.login-header { margin-bottom: 2rem; }
+
+.login-title { 
+  font-size: 2.5rem; 
+  font-weight: 900; 
+  font-style: italic; /* 修正完成 */
+  margin: 0.5rem 0; 
+}
+
+.login-subtitle { color: var(--text-dim); font-size: 0.9rem; }
+
+/* 角色選擇器 */
+.role-selector {
+  display: flex;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 5px;
+  border-radius: 1rem;
+  margin-bottom: 2rem;
+}
+
+.role-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-radius: 0.75rem;
+  transition: all 0.3s;
+  font-weight: 700;
+}
+
+.role-btn.active {
+  background: var(--gym-neon);
+  color: var(--gym-black);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 管理者界面專用樣式 */
+.admin-container {
+  width: 100%;
+  max-width: 500px;
+}
+
+.admin-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-bar input {
+  background: transparent;
+  border: none;
+  color: white;
+  width: 100%;
+  outline: none;
+}
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-card {
+  background: var(--gym-gray);
+  padding: 1.25rem;
+  border-radius: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.member-card:hover {
+  border-color: var(--gym-neon);
+  transform: translateX(5px);
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--gym-neon);
+  color: var(--gym-black);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.member-name { margin: 0; font-size: 1.1rem; }
+.member-status { margin: 4px 0 0; font-size: 0.75rem; color: var(--text-dim); }
+
+.member-stats {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.point-tag {
+  background: rgba(173, 255, 47, 0.1);
+  color: var(--gym-neon);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
