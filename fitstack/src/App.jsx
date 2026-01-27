@@ -5,10 +5,10 @@ import CheckInModal from './components/CheckInModal.jsx';
 import ProgressBar from './components/ProgressBar.jsx';
 import Login from './pages/Login.jsx'; 
 import AdminDashboard from './components/AdminDashboard.jsx'; 
-import { MOCK_USER, MOCK_USERS } from './data/mockData.js';
+import { MOCK_USERS } from './data/mockData.js';
 import { ChevronLeft } from 'lucide-react';
 
-// --- 新增：Firebase 相關引用 ---
+// --- Firebase 相關引用 ---
 import { db } from './firebase';
 import { doc, setDoc, updateDoc, onSnapshot, collection } from "firebase/firestore";
 
@@ -34,18 +34,18 @@ function App() {
         initDatabase();
       } else {
         setAllUsers(usersData);
-        // 如果正在查看特定成員，同步更新該成員的即時狀態
+        // 即時更新當前選中的成員資訊
         if (selectedMember) {
           const updated = usersData.find(u => u.id === selectedMember.id);
           if (updated) setSelectedMember(updated);
         }
-        // 設定一般使用者的歷史紀錄
+        // 設定一般使用者 (Allen) 的歷史紀錄
         const currentUser = usersData.find(u => u.id === 'user_01');
         if (currentUser) setHistory(currentUser.checkInHistory);
       }
     });
     return () => unsub();
-  }, [selectedMember?.id]); // 監聽選中對象的變化
+  }, [selectedMember?.id]);
 
   const initDatabase = async () => {
     for (const user of MOCK_USERS) {
@@ -94,7 +94,6 @@ function App() {
     }
   };
 
-  // 新增：兌換獎勵邏輯
   const handleRedeem = async (user) => {
     if (user.totalPoints < TARGET_POINTS) {
       alert(`點數不足！還差 ${TARGET_POINTS - user.totalPoints} 點`);
@@ -114,49 +113,65 @@ function App() {
 
   return (
     <div className="app-wrapper">
-      <header className="header-area" style={{ position: 'relative', width: '100%', maxWidth: '500px' }}>
+      {/* 優化排版：確保標題始終居中，按鈕絕對定位於兩側 */}
+      <header className="header-area">
         {userRole === 'admin' && selectedMember ? (
-          <button onClick={() => setSelectedMember(null)} className="nav-btn" style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+          <button 
+            onClick={() => setSelectedMember(null)} 
+            className="nav-btn" 
+            style={{ position: 'absolute', left: 0 }}
+          >
             <ChevronLeft size={20} />
           </button>
         ) : (
-          <button onClick={() => {setUserRole(null); setSelectedMember(null);}} className="nav-btn" style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', padding: '4px 12px' }}>
+          <button 
+            onClick={() => {setUserRole(null); setSelectedMember(null);}} 
+            className="nav-btn" 
+            style={{ position: 'absolute', left: 0, fontSize: '0.7rem' }}
+          >
             登出
           </button>
         )}
         <h1 className="main-title">FIT<span className="text-neon">STACK</span></h1>
       </header>
 
-      {userRole === 'user' ? (
-        <>
-          <ProgressBar current={history.length} total={TARGET_POINTS} />
-          <GymCalendar history={history} onCheckIn={handleDateClick} />
-          <CheckInModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirm} date={selectedDate} />
-        </>
-      ) : (
-        selectedMember ? (
-          <div className="admin-detail-view" style={{ width: '100%', maxWidth: '400px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <h2 className="text-neon">{selectedMember.name}</h2>
-              <p style={{ fontSize: '1.2rem', color: '#fbbf24', margin: '5px 0' }}>
-                目前點數：{selectedMember.totalPoints} / {TARGET_POINTS}
-              </p>
-              
-              {/* 兌換按鈕 */}
-              <button 
-                onClick={() => handleRedeem(selectedMember)}
-                className={`confirm-btn ${selectedMember.totalPoints >= TARGET_POINTS ? 'pulse-animation' : 'disabled-btn'}`}
-                style={{ width: '100%', marginTop: '10px', height: '45px' }}
-              >
-                {selectedMember.totalPoints >= TARGET_POINTS ? '🎁 立即兌換獎勵' : '點數尚未達標'}
-              </button>
-            </div>
-            <GymCalendar history={selectedMember.checkInHistory} onCheckIn={handleDateClick} />
-          </div>
+      {/* 主內容區：確保內部組件不會因寬度縮放而跑版 */}
+      <main style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {userRole === 'user' ? (
+          <>
+            <ProgressBar current={history.length} total={TARGET_POINTS} />
+            <GymCalendar history={history} onCheckIn={handleDateClick} />
+            <CheckInModal 
+              isOpen={isModalOpen} 
+              onClose={() => setIsModalOpen(false)} 
+              onConfirm={handleConfirm} 
+              date={selectedDate} 
+            />
+          </>
         ) : (
-          <AdminDashboard users={allUsers} onSelectUser={(user) => setSelectedMember(user)} />
-        )
-      )}
+          selectedMember ? (
+            <div className="admin-detail-view">
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <h2 className="text-neon" style={{ margin: 0 }}>{selectedMember.name}</h2>
+                <p style={{ fontSize: '1.2rem', color: '#fbbf24', margin: '8px 0', fontWeight: 'bold' }}>
+                  {selectedMember.totalPoints} / {TARGET_POINTS} P
+                </p>
+                
+                <button 
+                  onClick={() => handleRedeem(selectedMember)}
+                  className={`confirm-btn ${selectedMember.totalPoints >= TARGET_POINTS ? 'pulse-animation' : 'disabled-btn'}`}
+                  style={{ width: '100%', marginTop: '10px' }}
+                >
+                  {selectedMember.totalPoints >= TARGET_POINTS ? '🎁 立即兌換獎勵' : '點數尚未達標'}
+                </button>
+              </div>
+              <GymCalendar history={selectedMember.checkInHistory} onCheckIn={handleDateClick} />
+            </div>
+          ) : (
+            <AdminDashboard users={allUsers} onSelectUser={(user) => setSelectedMember(user)} />
+          )
+        )}
+      </main>
     </div>
   );
 }

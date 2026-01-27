@@ -11,36 +11,44 @@
   --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
-/* 2. 全域設定 */
-body {
+/* 2. 全域設定 - 確保基礎環境水平垂直居中 */
+body, html {
   margin: 0;
   padding: 0;
+  width: 100%;
+  min-height: 100vh;
   background-color: var(--gym-black);
   color: var(--text-main);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  min-height: 100vh;
+  display: flex;
+  justify-content: center; /* 水平居中核心 */
 }
 
-/* 3. 佈局組件 */
+/* 3. 佈局組件 - 響應式容器優化 */
 .app-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  align-items: center; /* 內部元素置中 */
+  justify-content: flex-start;
+  padding: 2rem 1rem;
+  width: 100%;
+  max-width: 480px; /* 限制最大寬度防止寬螢幕跑版 */
   min-height: 100vh;
+  box-sizing: border-box; /* 防止 padding 撐破寬度 */
 }
 
 .header-area {
+  width: 100%;
   text-align: center;
   margin-bottom: 2rem;
+  position: relative; /* 為了讓返回按鈕絕對定位 */
 }
 
 .main-title {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 900;
-  font-style: italic; /* 修正完成：補上屬性名稱 */
-  letter-spacing: -2px;
+  font-style: italic;
+  letter-spacing: -1px;
   margin: 0;
 }
 
@@ -55,7 +63,7 @@ body {
   margin-top: 1rem;
 }
 
-/* 4. 日曆卡片樣式 */
+/* 4. 日曆卡片樣式 - 寬度自適應 */
 .calendar-card {
   background: var(--gym-gray);
   padding: 1.5rem;
@@ -63,7 +71,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
   width: 100%;
-  max-width: 400px;
+  box-sizing: border-box;
 }
 
 .calendar-header {
@@ -74,22 +82,28 @@ body {
 }
 
 .month-label {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: 1px;
 }
 
 .nav-btn {
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-main);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 50%;
-  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
-.nav-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.nav-btn:hover { 
+  background: rgba(255, 255, 255, 0.1); 
+  border-color: var(--gym-neon);
+}
 
 /* 5. 日曆網格系統 */
 .weekday-row {
@@ -100,7 +114,7 @@ body {
 
 .weekday-label {
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-dim);
 }
@@ -108,7 +122,7 @@ body {
 .days-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .day-cell {
@@ -116,13 +130,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.03);
   transition: all 0.2s;
-  position: relative;
 }
 
 .day-cell:hover:not(.empty) {
@@ -133,353 +146,116 @@ body {
 .day-checked {
   background-color: var(--gym-neon);
   color: var(--gym-black);
-  box-shadow: 0 0 15px rgba(173, 255, 47, 0.4);
+  box-shadow: 0 0 10px rgba(173, 255, 47, 0.3);
 }
 
-.day-outside {
-  opacity: 0.2;
-  pointer-events: none;
-}
-
-/* 彈窗背景遮罩 */
+/* 彈窗樣式 */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
   display: flex;
-  align-items: flex-end;
+  align-items: center; /* 改為中央彈出 */
   justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
-/* 彈窗主體 */
 .modal-content {
   background: var(--gym-gray);
   width: 100%;
-  max-width: 500px;
-  border-radius: 2rem 2rem 0 0;
+  max-width: 400px;
+  border-radius: 1.5rem;
   padding: 2rem;
-  border-top: 2px solid var(--gym-neon);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.flex-items { display: flex; align-items: center; gap: 10px; }
-.modal-title { font-size: 1.25rem; font-weight: 800; margin: 0; }
-.close-btn { background: none; border: none; color: white; cursor: pointer; }
-
-/* 輸入框與按鈕 */
-.modal-body { display: flex; flex-direction: column; gap: 1rem; }
-.modal-desc { color: var(--text-dim); font-size: 0.9rem; margin: 0; }
-
-.gym-input {
-  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem;
-  border-radius: 0.75rem;
-  color: white;
-  font-size: 1.25rem;
-  text-align: center;
-  letter-spacing: 4px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
-
-.gym-input:focus {
-  outline: none;
-  border-color: var(--gym-neon);
-}
-
-.confirm-btn {
-  background: var(--gym-neon);
-  color: var(--gym-black);
-  padding: 1rem;
-  border-radius: 0.75rem;
-  font-weight: 800;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.confirm-btn:active { transform: scale(0.95); }
 
 /* 進度條容器 */
 .progress-container {
   width: 100%;
-  max-width: 400px;
   margin-bottom: 2rem;
   background: var(--gym-gray);
   padding: 1.25rem;
   border-radius: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  box-sizing: border-box;
 }
 
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.progress-label {
-  font-weight: 700;
-  font-size: 0.9rem;
-  letter-spacing: 1px;
-}
-
-.progress-count {
-  font-family: monospace;
-  color: var(--gym-neon);
-  font-weight: 800;
-}
-
-/* 進度條軌道 */
 .progress-track {
-  height: 12px;
+  height: 10px;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  position: relative;
-  margin-bottom: 1rem;
+  border-radius: 5px;
+  overflow: hidden;
 }
 
-/* 進度條填滿部分 */
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #adff2f, #7ed321);
-  border-radius: 6px;
-  box-shadow: 0 0 10px rgba(173, 255, 47, 0.5);
+  background: linear-gradient(90deg, var(--gym-neon), #7ed321);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 禮物圖示微調 */
-.reward-icon-wrapper {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--gym-gray);
-  padding: 2px;
-}
-
-.icon-glow {
-  filter: drop-shadow(0 0 5px var(--gym-neon));
-}
-
-.success-msg {
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-align: center;
-  margin: 0;
-}
-
-.remain-msg {
-  color: var(--text-dim);
-  font-size: 0.75rem;
-  text-align: center;
-  margin: 0;
-}
-
-/* 登入頁面佈局 */
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--gym-black);
-}
-
-.login-card {
-  background: var(--gym-gray);
-  padding: 3rem 2rem;
-  border-radius: 2rem;
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.login-header { margin-bottom: 2rem; }
-
-.login-title { 
-  font-size: 2.5rem; 
-  font-weight: 900; 
-  font-style: italic; /* 修正完成 */
-  margin: 0.5rem 0; 
-}
-
-.login-subtitle { color: var(--text-dim); font-size: 0.9rem; }
-
-/* 角色選擇器 */
-.role-selector {
-  display: flex;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 5px;
-  border-radius: 1rem;
-  margin-bottom: 2rem;
-}
-
-.role-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0.75rem;
-  border: none;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  border-radius: 0.75rem;
-  transition: all 0.3s;
-  font-weight: 700;
-}
-
-.role-btn.active {
-  background: var(--gym-neon);
-  color: var(--gym-black);
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* 管理者界面專用樣式 */
-.admin-container {
-  width: 100%;
-  max-width: 500px;
-}
-
-.admin-header {
-  margin-bottom: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.search-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.search-bar input {
-  background: transparent;
-  border: none;
-  color: white;
-  width: 100%;
-  outline: none;
-}
-
-.member-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
+/* 管理者列表優化 - 解決跑版 */
 .member-card {
   background: var(--gym-gray);
-  padding: 1.25rem;
+  padding: 1rem;
   border-radius: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.member-card:hover {
-  border-color: var(--gym-neon);
-  transform: translateX(5px);
+  margin-bottom: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .member-info {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
+  min-width: 0; /* 允許文字截斷防止撐開 */
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
+.member-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 兌換按鈕 */
+.confirm-btn {
+  width: 100%;
   background: var(--gym-neon);
   color: var(--gym-black);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.member-name { margin: 0; font-size: 1.1rem; }
-.member-status { margin: 4px 0 0; font-size: 0.75rem; color: var(--text-dim); }
-
-.member-stats {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.point-tag {
-  background: rgba(173, 255, 47, 0.1);
-  color: var(--gym-neon);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.admin-detail-view {
-  width: 100%;
-  max-width: 400px;
-  animation: fadeIn 0.3s ease-out;
-}
-
-.member-detail-header {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.member-detail-header .avatar {
-  margin: 0 auto 10px;
-  width: 60px;
-  height: 60px;
-  font-size: 1.5rem;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* 兌換按鈕專用樣式 */
 .disabled-btn {
-  background: var(--gym-gray) !important;
-  color: var(--text-dim) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #334155 !important;
+  color: #64748b !important;
   cursor: not-allowed !important;
 }
 
 .pulse-animation {
-  background: var(--gym-gold) !important; /* 兌換時變成金色 */
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+  background: var(--gym-gold) !important;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+  70% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(251, 191, 36, 0); }
   100% { transform: scale(1); }
+}
+
+/* 手機版微調 */
+@media (max-width: 400px) {
+  .main-title { font-size: 2rem; }
+  .calendar-card { padding: 1rem; }
+  .day-cell { font-size: 0.75rem; }
 }
