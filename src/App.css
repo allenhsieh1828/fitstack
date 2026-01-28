@@ -233,3 +233,24 @@ body, html {
   .modal-header { margin-bottom: 0.5rem; }
   .main-title { font-size: 1.8rem; }
 }
+
+/* 強制固定輸入框與按鈕高度，防止鍵盤彈出時擠壓 */
+.gym-input, .smart-input {
+  height: 55px !important;
+  min-height: 55px !important;
+  line-height: 55px !important;
+  margin: 10px 0 !important;
+  display: block !important;
+}
+
+.confirm-btn, .confirm-action-btn {
+  height: 50px !important;
+  min-height: 50px !important;
+  margin-top: 15px !important;
+}
+
+/* 鍵盤彈出時縮小標題間距 */
+@media screen and (max-height: 600px) {
+  .modal-title { font-size: 1.1rem; margin-bottom: 5px; }
+  .modal-desc { display: none; } /* 空間不足時隱藏描述文字 */
+}
