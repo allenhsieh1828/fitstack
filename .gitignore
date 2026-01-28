@@ -1,3 +1,6 @@
+# 強制從 Git 緩存中移除 dist（這不會刪除您電腦上的檔案，但會讓 GitHub 忽略它）
+git rm -r --cached dist
+
 # Logs
 logs
 *.log
