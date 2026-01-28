@@ -1,256 +1,197 @@
-/* --- 1. 基礎變數與環境優化 --- */
+/* ==========================================================================
+   1. 核心變數與基礎設定
+   ========================================================================== */
 :root {
   --gym-black: #020617;
   --gym-dark: #0f172a;
   --gym-card: #1e293b;
   --gym-neon: #adff2f;
-  --gym-gold: #fbbf24;
+  --gym-gold: #fbbf24; /* 兌換獎勵用的金色 */
   --gym-white: #f8fafc;
   --text-dim: #94a3b8;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body, html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100vh;
+  margin: 0; padding: 0;
+  width: 100%; min-height: 100vh;
   background-color: var(--gym-black);
   color: var(--gym-white);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  display: flex;
-  justify-content: center;
-  overflow-x: hidden; /* 防止手機版左右晃動 */
+  font-family: 'Inter', sans-serif;
+  display: flex; justify-content: center;
+  overflow-x: hidden;
 }
 
-/* --- 2. 佈局容器 (系統居中) --- */
 .app-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 480px;
-  min-height: 100vh;
-  padding: 2rem 1rem;
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; max-width: 480px; padding: 1.5rem 1rem;
   box-sizing: border-box;
 }
 
-.header-area {
-  width: 100%;
-  text-align: center;
-  margin-bottom: 2rem;
-  position: relative;
+.header-area { width: 100%; text-align: center; margin-bottom: 2rem; }
+.main-title { 
+  font-size: 2.5rem; font-weight: 900; font-style: italic; 
+  letter-spacing: -1px; color: var(--gym-white); 
 }
+.text-neon { color: var(--gym-neon); text-shadow: 0 0 10px rgba(173, 255, 47, 0.3); }
+.text-gold { color: var(--gym-gold); text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+.text-dim { color: var(--text-dim); }
 
-.main-title {
-  font-size: 2.5rem;
-  font-weight: 900;
-  font-style: italic;
-  letter-spacing: -1px;
-  margin: 0;
-  color: var(--gym-white);
-}
-
-.text-neon { color: var(--gym-neon); }
-
-/* --- 3. 彈窗深度美化 (解決手機崩潰關鍵) --- */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(12px);
-  display: flex;
-  align-items: center; /* 垂直置中，避免被鍵盤推擠出螢幕 */
-  justify-content: center;
-  z-index: 9999;
-  padding: 20px;
-}
-
-/* 合併您提供的 modal-content 樣式 */
-.modal-content {
-  background: var(--gym-dark);
-  width: 100%;
-  max-width: 360px;
-  border-radius: 24px;
-  border: 1px solid rgba(173, 255, 47, 0.3);
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-  max-height: 90vh; /* 確保在小螢幕也能完整顯示 */
-  display: flex;
-  flex-direction: column;
-  padding: 2rem;
-  box-sizing: border-box;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.flex-items { display: flex; align-items: center; gap: 12px; }
-.modal-title { font-size: 1.25rem; font-weight: 800; margin: 0; }
-
-.close-btn { 
-  background: rgba(255, 255, 255, 0.05); 
-  border: none; 
-  color: var(--text-dim); 
-  cursor: pointer;
-  border-radius: 50%;
-  padding: 5px;
-}
-
-.modal-body { display: flex; flex-direction: column; gap: 1rem; }
-.modal-desc { color: var(--text-dim); font-size: 0.9rem; margin: 0; text-align: center; }
-
-/* 智慧型輸入框：針對手機輸入優化 */
-.gym-input, .smart-input {
-  width: 100%;
-  background: var(--gym-black);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  padding: 16px;
-  border-radius: 12px;
-  color: var(--gym-white);
-  font-size: 1.5rem;
-  text-align: center;
-  letter-spacing: 8px;
-  font-weight: 800;
-  transition: 0.3s;
-  box-sizing: border-box;
-}
-
-.gym-input:focus, .smart-input:focus {
-  outline: none;
-  border-color: var(--gym-neon);
-  box-shadow: 0 0 15px rgba(173, 255, 47, 0.2);
-}
-
-.confirm-btn, .confirm-action-btn {
-  width: 100%;
-  background: var(--gym-neon);
-  color: var(--gym-black);
-  padding: 16px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 1rem;
-  border: none;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.confirm-btn:disabled {
-  background: #334155;
-  color: #64748b;
-  cursor: not-allowed;
-}
-
-/* --- 4. 登入頁面與進度條 (美化升級) --- */
-.login-card {
-  background: linear-gradient(180deg, var(--gym-dark) 0%, var(--gym-black) 100%);
-  border: 1px solid rgba(173, 255, 47, 0.2);
-  padding: 3rem 2rem;
-  border-radius: 2rem;
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-}
-
+/* ==========================================================================
+   2. 核心組件：進度條
+   ========================================================================== */
 .progress-container {
   width: 100%;
   background: var(--gym-card);
-  padding: 1.25rem;
-  border-radius: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 1.5rem;
   margin-bottom: 2rem;
   box-sizing: border-box;
+  border: 1px solid rgba(173, 255, 47, 0.2);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .progress-track {
-  height: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  overflow: hidden;
+  height: 14px; background: rgba(0, 0, 0, 0.4);
+  border-radius: 7px; overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #adff2f 0%, #d4ff00 100%);
+  height: 100%; width: 0;
+  background: linear-gradient(90deg, #adff2f, #d4ff00);
+  box-shadow: 0 0 15px var(--gym-neon);
   position: relative;
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 閃爍動畫效果 */
-.progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* --- 5. 日曆與管理介面穩定 --- */
+/* ==========================================================================
+   3. 核心組件：日曆 (與先前一致)
+   ========================================================================== */
 .calendar-card {
+  position: relative;
   background: var(--gym-card);
-  padding: 1.5rem;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  width: 100%;
+  padding: 2.2rem 1.25rem 1.5rem 1.25rem;
+  border-radius: 2rem;
+  border: 1.5px solid rgba(173, 255, 47, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(173, 255, 47, 0.05);
+  width: 100%; 
   box-sizing: border-box;
+  margin-top: 1rem;
 }
 
+.calendar-nav {
+  position: absolute; top: 1.8rem; left: 0; right: 0;
+  display: flex; justify-content: space-between;
+  padding: 0 1.25rem; pointer-events: none; z-index: 10;
+}
+
+.nav-btn {
+  pointer-events: auto; width: 42px; height: 42px; border-radius: 50%;
+  border: 1.5px solid var(--gym-neon); background: rgba(173, 255, 47, 0.08);
+  color: var(--gym-neon); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: var(--transition);
+}
+
+.nav-btn:active {
+  background: var(--gym-neon); color: var(--gym-black);
+  box-shadow: 0 0 20px var(--gym-neon); transform: scale(0.9);
+}
+
+.calendar-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 8px; text-align: center;
+}
+
+.calendar-day {
+  aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+  transition: var(--transition); -webkit-tap-highlight-color: transparent;
+}
+
+.day-today { border: 1.5px solid var(--gym-neon); color: var(--gym-neon); }
+.has-record { 
+  background: var(--gym-neon) !important; color: var(--gym-black) !important; 
+  font-weight: 900; box-shadow: 0 0 15px rgba(173, 255, 47, 0.4);
+}
+
+/* ==========================================================================
+   4. 管理者介面專用組件
+   ========================================================================= */
+/* 強制補點與兌換按鈕 */
+.confirm-btn {
+  width: 100%; padding: 12px; border-radius: 12px;
+  background: var(--gym-neon); color: var(--gym-black);
+  font-weight: 800; border: none; cursor: pointer;
+  transition: var(--transition); text-transform: uppercase;
+}
+
+.confirm-btn:active { transform: scale(0.95); opacity: 0.9; }
+
+/* 兌換獎勵專用的金色按鈕樣式 */
+.btn-gold {
+  background: var(--gym-gold) !important;
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+}
+
+/* 會員頭像小圓圈 */
+.member-avatar {
+  width: 38px; height: 38px;
+  background: var(--gym-dark);
+  border: 1px solid var(--gym-neon);
+  border-radius: 10px; /* 稍微方圓更有科技感 */
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gym-neon); font-weight: 900;
+}
+
+/* ==========================================================================
+   5. 卡片樣式 (含掃描線)
+   ========================================================================== */
 .member-card {
-  background: var(--gym-card);
-  padding: 1rem;
-  border-radius: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  background: rgba(30, 41, 59, 0.7);
+  padding: 1.2rem; border-radius: 1rem;
+  display: flex; justify-content: space-between; align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.05);
   margin-bottom: 0.75rem;
-  width: 100%;
-  box-sizing: border-box;
+  position: relative; overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.pulse-animation {
-  background: var(--gym-gold) !important;
-  animation: pulse 2s infinite;
+.member-card:active {
+  border: 1px solid var(--gym-neon);
+  box-shadow: 0 0 10px rgba(173, 255, 47, 0.2);
+  transform: translateX(5px);
 }
 
+.member-card::after {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(rgba(173, 255, 47, 0.03) 50%, transparent 50%);
+  background-size: 100% 4px; pointer-events: none;
+}
+
+/* ==========================================================================
+   6. 其他通用與動畫
+   ========================================================================== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+
+.flex-items { display: flex; align-items: center; }
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--gym-white);
+  padding: 8px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center;
+}
+
+.pulse-animation { animation: pulse 2s infinite; }
 @keyframes pulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
-  70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
-  100% { transform: scale(1); }
-}
-
-/* 針對鍵盤彈出時的極端情況優化 */
-@media screen and (max-height: 550px) {
-  .modal-content { padding: 1rem; }
-  .modal-header { margin-bottom: 0.5rem; }
-  .main-title { font-size: 1.8rem; }
-}
-
-/* 強制固定輸入框與按鈕高度，防止鍵盤彈出時擠壓 */
-.gym-input, .smart-input {
-  height: 55px !important;
-  min-height: 55px !important;
-  line-height: 55px !important;
-  margin: 10px 0 !important;
-  display: block !important;
-}
-
-.confirm-btn, .confirm-action-btn {
-  height: 50px !important;
-  min-height: 50px !important;
-  margin-top: 15px !important;
-}
-
-/* 鍵盤彈出時縮小標題間距 */
-@media screen and (max-height: 600px) {
-  .modal-title { font-size: 1.1rem; margin-bottom: 5px; }
-  .modal-desc { display: none; } /* 空間不足時隱藏描述文字 */
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
 }

@@ -1,195 +1,199 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
 import { 
-  X, Dumbbell, Users, Search, ChevronRight, Award, 
-  UserCog, List, Trophy, ChevronLeft, Calendar as CalendarIcon, Gift 
-} from 'lucide-react';
-import { 
-  format, startOfMonth, endOfMonth, startOfWeek, 
-  endOfWeek, eachDayOfInterval, isSameMonth, 
-  isSameDay, addMonths, subMonths 
-} from 'date-fns';
+  collection, onSnapshot, query, where, orderBy, 
+  addDoc, deleteDoc, doc, limit 
+} from 'firebase/firestore';
 
-// 核心設定：確保路徑與 Firebase 連線正確
 import { db } from './firebase'; 
-import { collection, addDoc, query, onSnapshot, serverTimestamp, orderBy } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LogOut, Trash2, Activity, History, Users, ChevronLeft, Gift, PlusCircle } from 'lucide-react';
 
-// --- [子組件 1] 進度條 (ProgressBar) ---
-const ProgressBar = ({ current, total = 10 }) => {
-  const percentage = Math.min((current / total) * 100, 100);
-  return (
-    <div className="progress-container">
-      <div className="progress-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span className="progress-label">獎勵進度</span>
-        <span className="progress-count">{current} / {total} 點</span>
-      </div>
-      <div className="progress-track" style={{ position: 'relative' }}>
-        <motion.div 
-          className="progress-fill"
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        />
-        <div className="reward-icon-wrapper" style={{ position: 'absolute', right: '-5px', top: '-25px' }}>
-          <Gift size={18} className={current >= total ? "text-neon icon-glow" : "text-dim"} />
-        </div>
-      </div>
-      {current >= total ? (
-        <p className="success-msg text-neon" style={{ marginTop: '10px', fontSize: '0.9rem' }}>恭喜！已達成兌換門檻 🎁</p>
-      ) : (
-        <p className="remain-msg" style={{ marginTop: '10px', fontSize: '0.9rem', color: 'var(--text-dim)' }}>再集 {total - current} 點即可兌換獎勵</p>
-      )}
-    </div>
-  );
-};
+import ProgressBar from './components/ProgressBar';
+import GymCalendar from './components/GymCalendar';
+import CheckInModal from './components/CheckInModal';
+import Login from './pages/Login'; 
+import './App.css';
 
-// --- [子組件 2] 健身月曆 (GymCalendar) ---
-const GymCalendar = ({ history = [], onCheckIn }) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(monthStart);
-  const calendarStart = startOfWeek(monthStart);
-  const calendarEnd = endOfWeek(monthEnd);
-  const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
-
-  return (
-    <div className="calendar-card" style={{ marginTop: '20px' }}>
-      <div className="calendar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-        <h2 className="month-label text-neon">{format(currentMonth, 'MMM yyyy').toUpperCase()}</h2>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="nav-btn"><ChevronLeft size={20}/></button>
-          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="nav-btn"><ChevronRight size={20}/></button>
-        </div>
-      </div>
-      <div className="weekday-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', marginBottom: '10px', color: 'var(--text-dim)' }}>
-        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (<div key={d} className="weekday-label">{d}</div>))}
-      </div>
-      <div className="days-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px' }}>
-        {days.map((day) => {
-          const isCheckIn = history.some(h => isSameDay(new Date(h), day));
-          const isCurrentMonth = isSameMonth(day, monthStart);
-          return (
-            <motion.div
-              key={day.toString()}
-              onClick={() => isCurrentMonth && onCheckIn(day)}
-              className={`day-cell ${isCheckIn ? 'day-checked' : ''} ${!isCurrentMonth ? 'day-outside' : ''}`}
-              style={{ 
-                aspectRatio: '1/1', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: isCurrentMonth ? 'pointer' : 'default',
-                backgroundColor: isCheckIn ? 'var(--gym-neon)' : 'transparent', color: isCheckIn ? 'black' : (isCurrentMonth ? 'white' : '#334155')
-              }}
-              whileTap={isCurrentMonth ? { scale: 0.9 } : {}}
-            >
-              {format(day, 'd')}
-            </motion.div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// --- [子組件 3] 簽到彈窗 (CheckInModal) ---
-const CheckInModal = ({ isOpen, onClose, onConfirm, date }) => {
-  const [code, setCode] = useState('');
-  if (!isOpen) return null;
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onConfirm(code);
-    setCode('');
-  };
-  return (
-    <AnimatePresence>
-      <div className="modal-overlay" onClick={onClose}>
-        <motion.div className="modal-content" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} onClick={(e) => e.stopPropagation()}>
-          <div className="modal-header">
-            <div className="flex-items"><Dumbbell className="text-neon" size={24} /> <h3 className="modal-title">健身簽到驗證</h3></div>
-            <button onClick={onClose} className="close-btn"><X size={20} /></button>
-          </div>
-          <form onSubmit={handleSubmit} className="modal-body">
-            <p className="modal-desc">正在為 <span className="text-neon">{date ? format(date, 'yyyy/MM/dd') : ''}</span> 簽到</p>
-            <input type="tel" pattern="[0-9]*" maxLength="4" value={code} onChange={(e) => setCode(e.target.value)} placeholder="0 0 0 0" className="gym-input smart-input" autoFocus />
-            <button type="submit" className={`confirm-btn ${code.length === 4 ? 'pulse-animation' : ''}`} disabled={code.length < 1}>確認簽到</button>
-          </form>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  );
-};
-
-// --- [子組件 4] 成員管理 ---
-const AdminDashboard = ({ users, onSelectUser }) => (
-  <div className="admin-container">
-    <div className="admin-header"><div className="flex-items"><Users className="text-neon" size={24} /><h2 className="month-label">成員管理系統</h2></div></div>
-    <div className="member-list" style={{ marginTop: '20px' }}>
-      {users.map((user, index) => (
-        <motion.div key={user.id} className="member-card" onClick={() => onSelectUser(user)} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
-          <div className="member-info"><div className="avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--gym-neon)', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', marginRight: '12px' }}>{user.name?.[0]}</div>
-          <div><h4 className="member-name">{user.name}</h4><p className="member-status" style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>上次：{user.lastCheckIn || '無'}</p></div></div>
-          <div className="member-stats" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><div className="point-tag" style={{ backgroundColor: 'rgba(173,255,47,0.1)', padding: '4px 8px', borderRadius: '8px', fontSize: '0.8rem' }}><Award size={14} className="text-neon" /> <span>{user.totalPoints || 0} 點</span></div><ChevronRight size={18} /></div>
-        </motion.div>
-      ))}
-    </div>
-  </div>
-);
-
-// --- [主組件] App ---
 export default function App() {
-  const [view, setView] = useState('member');
+  const [userRole, setUserRole] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null); 
+  const [records, setRecords] = useState([]);       
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [records, setRecords] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [targetDate, setTargetDate] = useState(new Date());
 
-  useEffect(() => {
-    const unsubRecords = onSnapshot(query(collection(db, "checkins"), orderBy("timestamp", "desc")), (snap) => {
-      setRecords(snap.docs.map(doc => doc.data().timestamp?.toDate()).filter(Boolean));
-    });
-    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
-      setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
-    return () => { unsubRecords(); unsubUsers(); };
-  }, []);
+  // --- [管理者專用狀態] ---
+  const [allMembers, setAllMembers] = useState([]); // 會員清單
+  const [viewingMember, setViewingMember] = useState(null); // 目前正在查看誰
 
-  const handleConfirm = async (code) => {
-    if (code === "1234") {
-      await addDoc(collection(db, "checkins"), { name: "Allen", timestamp: selectedDate });
-      setIsModalOpen(false);
-    } else { alert("驗證碼錯誤"); }
+  const handleLoginSuccess = (role, userData) => {
+    setUserRole(role);
+    setCurrentUser(userData);
+    if (role === 'user') {
+      setViewingMember(userData); // 一般會員只能看自己
+    }
   };
+
+  const handleLogout = () => {
+    setUserRole(null);
+    setCurrentUser(null);
+    setViewingMember(null);
+    setRecords([]);
+  };
+
+  // --- [1. 管理者：監聽所有會員列表] ---
+  useEffect(() => {
+    if (userRole !== 'admin') return;
+    const q = query(collection(db, "users"), orderBy("name", "asc"));
+    const unsub = onSnapshot(q, (snap) => {
+      setAllMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
+  }, [userRole]);
+
+  // --- [2. 監聽目前「目標會員」的簽到紀錄] ---
+  useEffect(() => {
+    if (!viewingMember?.id) return;
+    const q = query(
+      collection(db, "checkins"), 
+      where("userId", "==", viewingMember.id), 
+      orderBy("timestamp", "desc")
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setRecords(snap.docs.map(d => ({ 
+        id: d.id, 
+        date: d.data().timestamp?.toDate() || new Date(),
+        type: d.data().type || 'add'
+      })));
+    });
+    return () => unsub();
+  }, [viewingMember]);
+
+  // --- [3. 簽到/點數處理] ---
+  const handleCheckIn = async (date, type = 'add') => {
+    const targetId = viewingMember?.id;
+    if (!targetId) return;
+
+    try {
+      await addDoc(collection(db, "checkins"), { 
+        userId: targetId, 
+        timestamp: date, 
+        type: type, // 'add' 或 'redeem'
+        userName: viewingMember.name,
+        adminId: userRole === 'admin' ? currentUser.id : null
+      });
+      setIsModalOpen(false);
+    } catch (e) { alert("操作失敗"); }
+  };
+
+  // 兌換獎勵 (扣除 10 點)
+  const handleRedeemReward = () => {
+    if (window.confirm(`確定為 ${viewingMember.name} 兌換獎勵並扣除 10 點？`)) {
+      // 這裡採用簡單邏輯：連續新增 10 筆負向紀錄或標記一次兌換
+      // 為了保持系統簡單，我們直接新增一筆類型為 'redeem' 的紀錄，
+      // 並在計算點數時將其排除或扣除。
+      handleCheckIn(new Date(), 'redeem_complete');
+    }
+  };
+
+  if (!userRole) return <Login onLogin={handleLoginSuccess} />;
+
+  // 計算邏輯：總簽到次數 (排除已兌換的標記)
+  const validRecords = records.filter(r => r.type !== 'redeem_complete');
+  const currentPoints = validRecords.length > 0 && validRecords.length % 10 === 0 ? 10 : validRecords.length % 10;
 
   return (
     <div className="app-wrapper">
       <header className="header-area">
-        <div className="flex-items" style={{ justifyContent: 'center' }}>
-          <Dumbbell className="text-neon" size={32} /><h1 className="main-title">FIT<span className="text-neon">STACK</span></h1>
-        </div>
-        <button className="mode-toggle" onClick={() => setView(view === 'member' ? 'admin' : 'member')} style={{ position: 'absolute', right: '1rem', top: '1.2rem', background: 'none', border: 'none', color: 'white' }}>
-          {view === 'member' ? <UserCog size={24} /> : <List size={24} />}
-        </button>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex-items" style={{ justifyContent: 'space-between', width: '100%', padding: '0 10px' }}>
+          <div onClick={() => userRole === 'admin' && setViewingMember(null)} style={{ cursor: userRole === 'admin' ? 'pointer' : 'default' }}>
+            <h1 className="main-title" style={{ fontSize: '1.5rem' }}>FIT<span className="text-neon">STACK</span></h1>
+            <p className="text-dim" style={{ fontSize: '0.6rem', letterSpacing: '2px' }}>{userRole.toUpperCase()} MODE</p>
+          </div>
+          
+          <div className="flex-items" style={{ background: 'rgba(255,255,255,0.05)', padding: '5px 12px', borderRadius: '20px', border: '1px solid rgba(173,255,47,0.2)' }}>
+            <span className="text-neon" style={{ fontWeight: '800', fontSize: '0.8rem', marginRight: '10px' }}>{currentUser?.name}</span>
+            <button className="close-btn" onClick={handleLogout}><LogOut size={14} /></button>
+          </div>
+        </motion.div>
       </header>
 
-      {view === 'member' ? (
-        <main style={{ width: '100%' }}>
-          <h2 className="text-neon" style={{ fontSize: '2rem', marginBottom: '1.5rem', textAlign: 'center' }}>Allen</h2>
-          
-          {/* 整合後的進度條組件 */}
-          <ProgressBar current={records.length} total={10} />
+      <main style={{ width: '100%' }}>
+        {/* --- 管理者：會員列表視圖 --- */}
+        {userRole === 'admin' && !viewingMember ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div className="flex-items" style={{ marginBottom: '1.5rem', gap: '8px' }}>
+              <Users size={18} className="text-neon" />
+              <p style={{ fontWeight: '800', fontSize: '0.9rem' }}>MEMBERS LIST</p>
+            </div>
+            {allMembers.map(member => (
+              <div key={member.id} className="member-card" onClick={() => setViewingMember(member)}>
+                <div className="flex-items" style={{ gap: '12px' }}>
+                  <div style={{ width: '35px', height: '35px', background: 'var(--gym-dark)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--gym-neon)' }}>
+                    {member.name.charAt(0)}
+                  </div>
+                  <span style={{ fontWeight: '700' }}>{member.name}</span>
+                </div>
+                <span className="text-neon" style={{ fontSize: '0.8rem' }}>MANAGE →</span>
+              </div>
+            ))}
+          </motion.div>
+        ) : (
+          /* --- 個人/選中會員 詳細視圖 --- */
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+            {userRole === 'admin' && (
+              <button onClick={() => setViewingMember(null)} className="flex-items" style={{ background: 'none', border: 'none', color: 'var(--text-dim)', marginBottom: '1rem', cursor: 'pointer', gap: '4px' }}>
+                <ChevronLeft size={16} /> 返回會員列表
+              </button>
+            )}
 
-          <button 
-            className={`confirm-action-btn ${records.length >= 10 ? 'pulse-animation' : ''}`} 
-            onClick={() => { setSelectedDate(new Date()); setIsModalOpen(true); }}
-            style={{ margin: '20px 0', width: '100%' }}
-          >
-            {records.length >= 10 ? "🎁 立即兌換獎勵" : "🏋️ 立即簽到"}
-          </button>
+            <ProgressBar current={currentPoints} total={10} />
 
-          <GymCalendar history={records} onCheckIn={(day) => { setSelectedDate(day); setIsModalOpen(true); }} />
-        </main>
-      ) : (
-        <AdminDashboard users={users} onSelectUser={(u) => alert(`成員詳情：${u.name}`)} />
-      )}
+            <div className="calendar-card">
+              <GymCalendar records={validRecords} onDateClick={(date) => { setTargetDate(date); setIsModalOpen(true); }} />
+            </div>
 
-      <CheckInModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirm} date={selectedDate} />
+            {/* 管理者操作面板 */}
+            {userRole === 'admin' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '1.5rem' }}>
+                <button onClick={() => handleCheckIn(new Date())} className="confirm-btn" style={{ height: '45px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <PlusCircle size={16} /> 手動補點
+                </button>
+                <button onClick={handleRedeemReward} className="confirm-btn" style={{ height: '45px', fontSize: '0.8rem', background: 'var(--gym-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <Gift size={16} /> 兌換獎勵
+                </button>
+              </div>
+            )}
+
+            {/* 最近紀錄 */}
+            <div style={{ marginTop: '2.5rem' }}>
+              <div className="flex-items" style={{ justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <p className="text-dim" style={{ fontSize: '0.8rem', fontWeight: '800' }}>RECENT ACTIVITY / {viewingMember?.name}</p>
+              </div>
+              <AnimatePresence mode="popLayout">
+                {records.slice(0, 5).map((r, index) => (
+                  <motion.div key={r.id} className="member-card" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
+                    <span style={{ fontSize: '0.85rem', color: r.type.includes('redeem') ? 'var(--gym-gold)' : 'var(--gym-white)' }}>
+                      {r.type.includes('redeem') ? '🎁' : '✅'} {format(r.date, 'yyyy/MM/dd HH:mm')}
+                    </span>
+                    {userRole === 'admin' && (
+                      <Trash2 size={16} className="text-dim" style={{ cursor: 'pointer' }} onClick={() => window.confirm("確定刪除此紀錄？") && deleteDoc(doc(db, "checkins", r.id))} />
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </main>
+
+      <CheckInModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onConfirm={handleCheckIn} 
+        date={targetDate}
+        userRole={userRole} 
+      />
     </div>
   );
 }
