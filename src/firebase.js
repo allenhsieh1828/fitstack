@@ -1,6 +1,7 @@
-// src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore"; // 我們需要的是資料庫
+import { getFirestore } from "firebase/firestore";
+// 如果您需要分析功能，可以保留這行，否則可以刪除
+import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDiXls2FURRj-j5nyjKfnw72tvVmS1Ad9k",
@@ -14,8 +15,7 @@ const firebaseConfig = {
 
 // 初始化 Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-// 初始化 Firestore 並導出
-const db = getFirestore(app);
-
-export { db };
+// 核心：初始化並導出 Firestore 資料庫
+export const db = getFirestore(app);
